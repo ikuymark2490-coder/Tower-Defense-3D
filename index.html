@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Tower Defense 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/ui.css">
+</head>
+<body>
+
+<!-- ROTATE SCREEN BLOCKER -->
+<div id="rotateOverlay">
+  <div class="rotate-inner">
+    <div class="rotate-icon">&#x27F3;</div>
+    <div class="rotate-msg" id="rotateMsg">&#3585;&#3619;&#3640;&#3603;&#3634;&#3627;&#3617;&#3640;&#3609;&#3627;&#3609;&#3657;&#3634;&#3592;&#3629;&#3649;&#3609;&#3623;&#3609;&#3629;&#3609;</div>
+    <div class="rotate-sub" id="rotateSub">Please rotate to Landscape</div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen">
+  <div class="load-inner">
+    <div class="load-logo">TOWER<br><span>DEFENSE</span></div>
+    <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+    <div class="load-pct" id="loadPct">0%</div>
+    <div class="load-tip" id="loadTip" data-i18n="loading_tip"></div>
+  </div>
+</div>
+
+<!-- CANVAS -->
+<canvas id="c"></canvas>
+
+<!-- UI OVERLAY -->
+<div id="ui">
+
+  <!-- Stats: top-left -->
+  <div id="stats">
+    <div class="stat" id="statWave">
+      <div class="stat-l" data-i18n="wave">WAVE</div>
+      <div class="stat-v" id="sWave">0</div>
+    </div>
+    <div class="stat" id="statMoney">
+      <div class="stat-l" data-i18n="gold">GOLD</div>
+      <div class="stat-v gold" id="sMoney">200</div>
+    </div>
+    <div class="stat" id="statLives">
+      <div class="stat-l" data-i18n="lives">LIVES</div>
+      <div class="stat-v red" id="sLives">20</div>
+    </div>
+  </div>
+
+  <!-- Controls: top-right -->
+  <div id="controls">
+    <button id="btnCam"      class="cbtn ico-btn" data-i18n="btn_roam">ROAM</button>
+    <button id="btnWave"     class="cbtn pulse"   data-i18n="btn_start">&#9654; START</button>
+    <button id="btnPause"    class="cbtn ico-btn" data-i18n="btn_pause">&#9208;</button>
+    <button id="btnSettings" class="cbtn ico-btn" data-i18n="btn_settings">&#9881;</button>
+  </div>
+
+  <!-- Camera indicator -->
+  <div id="camIndicator" data-i18n="god_view">GOD VIEW</div>
+
+  <!-- Tower build bar: bottom -->
+  <div id="towerBar">
+    <div class="tslot" data-type="gun">
+      <div class="ticon" style="color:#4af">&#x2B21;</div>
+      <div class="tname" data-i18n="tower_gun">GUN</div>
+      <div class="tcost">50g</div>
+    </div>
+    <div class="tslot" data-type="slow">
+      <div class="ticon" style="color:#4ff">&#10053;</div>
+      <div class="tname" data-i18n="tower_slow">SLOW</div>
+      <div class="tcost">70g</div>
+    </div>
+    <div class="tslot" data-type="cannon">
+      <div class="ticon" style="color:#f84">&#9673;</div>
+      <div class="tname" data-i18n="tower_cannon">CANNON</div>
+      <div class="tcost">120g</div>
+    </div>
+    <div class="tslot cancel-slot" id="cancelSlot" style="display:none;">
+      <div class="ticon" style="color:#f35">&#10005;</div>
+      <div class="tname" data-i18n="cancel">CANCEL</div>
+    </div>
+  </div>
+
+  <!-- Tower info panel -->
+  <div id="towerInfo" class="hidden">
+    <div class="ti-head">
+      <span id="tiTitle">TOWER</span>
+      <span id="tiLvl" class="lvl-badge">LV1</span>
+      <button id="btnClose" class="cbtn sm-btn">&#10005;</button>
+    </div>
+    <div id="tiStats"></div>
+    <div class="ti-btns">
+      <button id="btnUpgrade" class="cbtn upg-btn" data-i18n="upgrade">&#11014; UPGRADE</button>
+      <button id="btnSell"    class="cbtn sell-btn" data-i18n="sell">&#128176; SELL</button>
+    </div>
+  </div>
+
+  <!-- Message overlay -->
+  <div id="msgBox"></div>
+
+  <!-- Roam notice -->
+  <div id="roamNotice" class="hidden" data-i18n="roam_notice"></div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span data-i18n="settings">SETTINGS</span>
+        <button id="btnSettingsClose" class="cbtn sm-btn">&#10005;</button>
+      </div>
+      <div class="modal-section">
+        <div class="section-title" data-i18n="settings_game">GAMEPLAY</div>
+        <div class="setting-row">
+          <span data-i18n="sfx_volume">Sound Effects</span>
+          <input type="range" id="sfxVolume" min="0" max="1" step="0.1" value="0.7">
+        </div>
+        <div class="setting-row">
+          <span data-i18n="screen_shake">Screen Shake</span>
+          <label class="toggle">
+            <input type="checkbox" id="screenShake" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="section-title" data-i18n="settings_lang">LANGUAGE</div>
+        <div class="lang-btns">
+          <button class="lang-btn" data-lang="en" data-i18n="lang_en">English</button>
+          <button class="lang-btn" data-lang="th" data-i18n="lang_th">Thai</button>
+        </div>
+      </div>
+      <button id="btnSettingsApply" class="cbtn full-btn" data-i18n="close_settings">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div id="startScreen">
+    <div class="start-inner">
+      <div class="logo-main">TOWER<br>DEFENSE</div>
+      <div class="logo-sub">3D &middot; TACTICAL</div>
+      <p class="map-label" data-i18n="select_map">SELECT MAP</p>
+      <div class="map-btns">
+        <button class="mbtn" data-size="small">
+          <span class="mbtn-label" data-i18n="map_small">SMALL</span>
+          <span class="mbtn-desc" data-i18n="map_small_desc">5 waves &middot; Easy</span>
+        </button>
+        <button class="mbtn" data-size="medium">
+          <span class="mbtn-label" data-i18n="map_medium">MEDIUM</span>
+          <span class="mbtn-desc" data-i18n="map_medium_desc">10 waves &middot; Normal</span>
+        </button>
+        <button class="mbtn" data-size="large">
+          <span class="mbtn-label" data-i18n="map_large">LARGE</span>
+          <span class="mbtn-desc" data-i18n="map_large_desc">&#8734; Sandbox</span>
+        </button>
+      </div>
+      <div class="tips">
+        <div data-i18n="tip_landscape">&#128241; Best played in Landscape</div>
+        <div data-i18n="tip_click">&#128432; Tap map to place towers</div>
+      </div>
+      <div class="start-lang">
+        <button class="lang-btn sm" data-lang="en">EN</button>
+        <button class="lang-btn sm" data-lang="th">TH</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER SCREEN -->
+  <div id="gameOver" class="hidden">
+    <div class="go-inner">
+      <div id="goTitle">GAME OVER</div>
+      <div id="goMsg"></div>
+      <button class="cbtn go-btn" id="btnRestart" data-i18n="play_again">&#9654; PLAY AGAIN</button>
+    </div>
+  </div>
+
+</div><!-- /#ui -->
+
+<!-- Three.js r128 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- Language files (load first) -->
+<script src="js/lang/en.js"></script>
+<script src="js/lang/th.js"></script>
+<script src="js/lang/i18n.js"></script>
+
+<!-- Game modules -->
+<script src="js/settings.js"></script>
+<script src="js/sounds.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/path.js"></script>
+<script src="js/map.js"></script>
+<script src="js/camera.js"></script>
+<script src="js/economy.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/enemy.js"></script>
+<script src="js/projectile.js"></script>
+<script src="js/tower.js"></script>
+<script src="js/wave.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/input.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
